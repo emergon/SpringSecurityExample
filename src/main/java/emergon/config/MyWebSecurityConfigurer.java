@@ -1,24 +1,33 @@
 package emergon.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.User.UserBuilder;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 @EnableWebSecurity
 public class MyWebSecurityConfigurer extends WebSecurityConfigurerAdapter {
 
+    @Autowired
+    private UserDetailsService userService;
+    
+    
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        UserBuilder users = User.builder();
-        auth.inMemoryAuthentication()
-                .withUser(users.username("admin").password("{noop}1234").roles("ADMIN", "USER", "CUSTOMER"))
-                .withUser(users.username("user").password("{noop}1234").roles("USER"));
+//        UserBuilder users = User.builder();
+//        auth.inMemoryAuthentication()
+//                .withUser(users.username("admin").password("{noop}1234").roles("ADMIN", "USER", "CUSTOMER"))
+//                .withUser(users.username("user").password("{noop}1234").roles("USER"));
+        auth.authenticationProvider(authenticationProvider());
     }
 
     @Override
@@ -33,7 +42,20 @@ public class MyWebSecurityConfigurer extends WebSecurityConfigurerAdapter {
                 .loginProcessingUrl("/authenticate")//The check of credentials will be performed by this url
                 .permitAll()//Allow everyone to see login page. Users don't have to be logged in
                 .and().logout().permitAll()
-                ;
+                .and().exceptionHandling().accessDeniedPage("/access-denied");
+    }
+    
+    @Bean
+    public AuthenticationProvider authenticationProvider(){
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userService);
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
+    }
+    
+    @Bean
+    public PasswordEncoder passwordEncoder(){
+        return new BCryptPasswordEncoder();
     }
 
 }

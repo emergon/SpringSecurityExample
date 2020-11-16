@@ -14,14 +14,18 @@
         <br/>
         Roles: <security:authentication property="principal.authorities" />
         <hr>
-        
-        <p>
-            <a href="${pageContext.request.contextPath}/admin">Admin</a>
-        </p>
-        <p>
-            <a href="${pageContext.request.contextPath}/user">User</a>
-        </p>
-        
+
+        <security:authorize access="hasRole('ADMIN')">
+            <p>
+                <a href="${pageContext.request.contextPath}/admin">Admin</a>
+            </p>
+        </security:authorize>
+        <security:authorize access="hasRole('USER')">
+            <p>
+                <a href="${pageContext.request.contextPath}/user">User</a>
+            </p>
+        </security:authorize>
+
         <form:form action="${pageContext.request.contextPath}/logout" method="post">
             <input type="submit" value="Logout"/>
         </form:form>
